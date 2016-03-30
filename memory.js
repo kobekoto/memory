@@ -1,7 +1,9 @@
 (function() {
 
     var prevSquareVal,
+        prevSquareEl,
         currentSquareVal,
+        currentSquareEl,
         clickCount = 0;
 
     var Board = function(size) {
@@ -21,7 +23,6 @@
             table.appendChild(newRow);
         }
         document.body.appendChild(table);
-        this.checkMatches();
     };
 
     Board.prototype.createDupArrays = function() {
@@ -59,50 +60,57 @@
         }
     };
 
-    Board.prototype.addingWhite = function() {
+    Board.prototype.addingWhite = function(element) {
         clickCount++;
-        $(this).addClass("changeWhite");
-        console.log(clickCount);
+        element.classList.add("changeWhite");
+
     };
 
-    Board.prototype.tilesDoMatch = function() {
-        $(".changeWhite .text").addClass("popUp");
-        $(".popUp").parent().css({
-            "border": "none",
-            "pointer-events": "none"
-        });
-        $(".popUp").parent().removeClass("changeWhite");
+    Board.prototype.tilesDoMatch = function(prevEl, currentEl) {
+        prevEl.classList.remove("changeWhite");
+        currentEl.classList.remove("changeWhite");
+        prevEl.classList.add("popUp");
+        currentEl.classList.add("popUp");
     };
 
     Board.prototype.tilesDontMatch = function() {
+        var $cells = document.getElementsByTagName("TD");
         setTimeout(function() {
-            $("td").removeClass("changeWhite");
+            for (var i = 0; i < $cells.length; i++) {                            
+              $cells[i].classList.remove("changeWhite");                    
+            }
+
         }, 1300);
     };
 
     Board.prototype.checkMatches = function() {
-        $("table").on("click", "td", function() {
-            if (!$(this).hasClass("changeWhite")) {
-
-                this.addingWhite();
-
-                if (clickCount === 1) {
-                    prevSquareVal = $(this).text();
-                }
-
-                if (clickCount === 2) {
-                    currentSquareVal = $(this).text();
-                    clickCount = 0;
-                }
-
+        var self = this;
+        var $table = document.getElementsByTagName("table")[0];
+      
+        $table.addEventListener("click", function(event) {
+          var clickedEl = event.target;
+          if (clickedEl.tagName === 'TD') {
+            if (!(clickedEl.classList.contains("changeWhite"))) {
+                
+              console.log(this, clickedEl);
+              self.addingWhite(clickedEl);
+              
+              if (clickCount === 1) {
+                prevSquareVal = clickedEl.textContent;
+                prevSquareEl = clickedEl;
+              } else if (clickCount === 2) {
+                currentSquareVal = clickedEl.textContent;
+                currentSquareEl = clickedEl;
                 if (prevSquareVal === currentSquareVal) {
-                    this.tilesDoMatch();
+                  self.tilesDoMatch(prevSquareEl, currentSquareEl);
                 } else {
-                    this.tilesDontMatch();
-                }
+                  self.tilesDontMatch();
+                }                                    
+                clickCount = 0;
+              }
             }
+          }        
         });
-
     };
 
 
@@ -111,6 +119,6 @@
     board.createSquares();
     board.createDupArrays();
     board.randomizeBoard();
-    // board.checkMatches();
+    board.checkMatches();
 
 })();
